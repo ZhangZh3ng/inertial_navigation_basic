@@ -23,6 +23,7 @@ end
 subplot(mnp);
 plot(x, y);
 grid on;
+axis tight;
 
 % xÖáºÍyÖáµÄ×¢ÊÍ
 if nargin == 4
