@@ -8,7 +8,8 @@
 %日期：2020年10月4日
 % ************************************************************************
 %%
-global GM Re ff wie ge gp g0 ug arcdeg arcmin arcsec hur dph dpsh ugpsHz lsc
+global GM Re ff wie ge gp g0 ug arcdeg arcmin arcsec hur ...
+    dph dpsh ugpsHz lsc deg min sec
 
 % WGS-84 model
 GM = 3.986004415e14;
@@ -31,12 +32,17 @@ ug = g0*1e-6;
 arcdeg = pi/180;
 arcmin = arcdeg/60;
 arcsec = arcmin/60;
+% 把弧度转化成角度、角分和角秒
+deg = 1/arcdeg;
+min = 1/arcmin;
+sec = 1/arcsec;
 
+% 1hour = 3600s
 hur = 3600;
 dph = arcdeg/hur;
 dpsh = arcdeg/sqrt(hur);
 ugpsHz = ug/sqrt(1);
 
 % lsc: line shape and color
-% 注意! lsc中各个字符串元素的长度必须相同，空格也计入字符串长度
+% 注意! lsc中的字符串长度必须相同，空格也计入长度
 lsc = [' -k'; ' -b'; ' -r'; '-.m'; '--g'; ' :c'];

@@ -28,9 +28,6 @@ if size(beta, 1) == 1
 end
 
 % alpha和beta在四元数乘法中对应的系数矩阵：
-% Ma = Mq([0, alpha']', 2);
-% Mb = Mq([0, beta']', 1);
-
 Ma = [    0,      -alpha'
       alpha, -skew(alpha)];
 

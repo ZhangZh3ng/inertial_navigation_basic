@@ -16,11 +16,11 @@ function [ eth ] = earth( pos, vn )
 % ************************************************************************
 %%
 % 将输入参数调整为列向量
-if size(vn, 1) == 1
-    vn = vn';
-end
 if size(pos, 1) == 1
     pos = pos';
+end
+if size(vn, 1) == 1
+    vn = vn';
 end
 
 global Re ff wie g0

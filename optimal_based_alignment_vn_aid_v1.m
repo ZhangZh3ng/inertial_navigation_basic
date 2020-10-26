@@ -1,5 +1,5 @@
 %% **************************************************************
-%名称：Opitiaml Based Alignment (GPS velocity aided) 
+%名称：Opitiaml Based Alignment (GPS velocity aided) version 1.0
 %功能：
 %________________________________________________________________________
 % 缩写的含义：
@@ -14,6 +14,7 @@
 % ************************************************************************
 %%
 % 全局变量
+close all
 gvar_earth;
 
 % ** 下载数据 **
@@ -36,16 +37,16 @@ ts_gps = 1/f_gps;
 num_imu_data = size(imu_ref.acc, 1);
 
 % *** 给imu数据添加误差 ***
-imu_err = imuerror();
+imu_err = imuerrorset('selfdefine');
 % add imu error
-[imu_msr.gyr, imu_msr.gyr] = imuadderr(imu_ref.gyr, imu_ref.acc, ...
+[imu_msr.gyr, imu_msr.acc] = imuadderr(imu_ref.gyr, imu_ref.acc, ...
                 imu_err.eb, imu_err.web, imu_err.db, imu_err.wdb, ts_imu);
 
 % ** 设置全局变量 **
 % 第一个"读入"的数据所对应的时刻以及在imu_ref和trajectory_ref中的位置 (s)
 % 可以认为导航系统是在第start_time秒启动的
 start_time = 0;
-first_data_index = fix(start_time/ts_imu) + 1;
+first_data_index = round(start_time/ts_imu) + 1;
 % 对准时间长度 (s)
 total_alignment_time = 92;
 
@@ -75,6 +76,7 @@ eth_prv = earth(pos_prv, vn_prv);
 % bt系和nt系相对惯性空间变化量
 Cntn0_prv = eye(3);
 Cbtb0_prv = eye(3);
+qbtb0 = [1, 0, 0, 0]';
 
 % 上次更新过后的alpha和beta
 alpha_prv = zeros(3, 1);
@@ -85,7 +87,8 @@ alpha_sigma = zeros(3, 1);
 K_prv = zeros(4, 4);
 
 % 分配动态变量存储空间
-phi_sv = zeros(fix(total_alignment_time/ts_imu), 3);
+phi_sv = zeros(round(total_alignment_time/ts_imu), 3);
+phi0_sv = zeros(round(total_alignment_time/ts_imu), 3);
 
 % 计数变量
 % 当前时刻 s
@@ -94,7 +97,6 @@ current = 0;
 i = 0;
 % index
 k = 0;
-
 %%
 % 我们的终极目标是让算法能够在实际中运行，实际中情况大概是这样的：
 % 1. t=0，惯导开机
@@ -108,7 +110,7 @@ while current < total_alignment_time
     current = current + nts;
     
     % 当前时刻(current)在trajectory_ref中对应的数据编号
-    k = fix(current/ts_imu) + first_data_index;
+    k = round(current/ts_imu) + first_data_index;
     % 惯导解算循环次数
     i = i+1;
     
@@ -119,16 +121,20 @@ while current < total_alignment_time
     qbn_ref = a2qua(att_ref);
     
     % 用参考速度模拟当前时刻GPS速度,其中位置信息暂时不加误差
-    vn_gps = vn_ref + .5.*randn(3, 1);
+    vn_gps = vn_ref + 0.*randn(3, 1);
     pos_gps = pos_ref;
+    
+    vn_gps_sv(i, :) = vn_gps;
     % 用gps输出的速度作为组合导航系统给出的速度
     vn = vn_gps;
     pos = pos_gps;
     
     % 从imu_ref中读出(current - nts, current]这段时间内imu输出的n组量测信息
-    wm = imu_ref.gyr(k-num_subsample+1 : k, :);
-    vm = imu_ref.acc(k-num_subsample+1 : k, :);
+    wm = imu_msr.gyr(k-num_subsample+1 : k, :);
+    vm = imu_msr.acc(k-num_subsample+1 : k, :);
     
+    wm_sv(2*i-1:2*i, :) = wm;
+    vm_sv(2*i-1:2*i, :) = vm;
     % 步长圆锥/划桨误差
     [phim, dvbm] = cnscl(wm, vm);
     
@@ -136,7 +142,10 @@ while current < total_alignment_time
     % 用winn(tm-1)计算Cntmntm-1
     Cntn0 = Cntn0_prv*rv2m(eth_prv.winn*nts);
     % 用经过补偿得到的(current - nts, current]这段时间内的角增量算Cbtb0
-    Cbtb0 = Cbtb0_prv*rv2m(phim);
+    % Cbtb0 = Cbtb0_prv*rv2m(phim);
+    qbtb0 = qmul(qbtb0, rv2q(phim));
+    qbtb0 = qnormlz(qbtb0);
+    Cbtb0 = q2mat(qbtb0);
     
     % *** 计算alpha(n0)和beta(b0) ***
     % alpha(n0)
@@ -149,13 +158,14 @@ while current < total_alignment_time
     beta = beta_prv + Cbtb0_prv*dvbm;
     
     % QUEST 方法计算qbn0
-    [ qbn0, K ] = QUEST ( beta, alpha, K_prv );
+    [ qbn0, K ] = QUEST( beta, alpha, K_prv );
     
     % 姿态解算
     Cbn0 = q2mat(qbn0);
     Cbn = Cntn0'*Cbn0*Cbtb0;
     att = m2att(Cbn);
-    phi_sv(i, :) = atterrnorml(att - att_ref)*180/pi;
+    phi0_sv(i, :) = atterrnorml(q2att(qbn0) - att0_ref)*deg;
+    phi_sv(i, :) = atterrnorml(att - att_ref)*deg;
     
     % 计算导航解算时所需要的相关参数
     eth = earth(pos, vn);
@@ -175,11 +185,27 @@ end
 
 % 注意：如果end前面加了空格就会出错!
 phi_sv(i+1:end, :) = [];
+phi0_sv(i+1:end, :) = [];
 %% 绘图
 time_axis = (1:1:i)*nts;
+time_axis_imu = (1:1:2*i)*ts_imu;
 
 % Cbn误差
 msplot(311, time_axis, phi_sv(:, 1), 'pitch error / \circ');
 msplot(312, time_axis, phi_sv(:, 2), 'roll error / \circ');
 msplot(313, time_axis, phi_sv(:, 3), 'yaw error / \circ');
 
+%Cbn0 误差
+msplot(311, time_axis, phi0_sv(:, 1), 'pitch error / \circ');
+msplot(312, time_axis, phi0_sv(:, 2), 'roll error / \circ');
+msplot(313, time_axis, phi0_sv(:, 3), 'yaw error / \circ');
+
+%imu输出
+msplot(311, time_axis_imu, wm_sv(:, 1), 'wibbx / rad/s');
+msplot(312, time_axis_imu, wm_sv(:, 2), 'wibby / rad/s');
+msplot(313, time_axis_imu, wm_sv(:, 3), 'wibbz / rad/s');
+
+%imu输出
+msplot(311, time_axis_imu, vm_sv(:, 1), 'fbx / m/s^2');
+msplot(312, time_axis_imu, vm_sv(:, 2), 'fby / m/s^2');
+msplot(313, time_axis_imu, vm_sv(:, 3), 'fbz / m/s^2');

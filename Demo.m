@@ -58,8 +58,12 @@ wm = [1, 1, 1
 % rk = [[0.1; 0.1; 0.1]; [10; 10; 10]]';
 % Rk = diag(rk)^2;
 
-R =1 + 0.1.*randn(10000, 1);
-mean(R)
-var(R)
+% R =1 + 0.1.*randn(10000, 1);
+% mean(R)
+% var(R)
+% 
+% clearvars -except R
+% imu_err = imuerror();
+name = 'selfdefine';
+exist('name', 'var') && ~strcmp(name, '') && ~strcmp(name, 'zero')
 
-clearvars -except R

@@ -1,4 +1,4 @@
-function [ imu_err ] = imuerror( condition )
+function [ imu_err ] = imuerrorset( condition )
 %% **************************************************************
 %名称：imu error
 %功能：设置imu误差
@@ -18,15 +18,17 @@ function [ imu_err ] = imuerror( condition )
 %%
 gvar_earth;
 
-if exist('condition', 'var')
+% 如果存在condition,并且condition != ''和'zero'
+if exist('condition', 'var') && ~strcmp(condition, '') ...
+                             && ~strcmp(condition, 'zero') 
     switch condition
-        % *** 自定义方案 ***
         case 'selfdefine'
+            % *** 自定义方案 ***
             imu_err.case = 'selfdefine';
-            imu_err.eb = [0.1, 0.1, 0.1]'*dph;
+            imu_err.eb = [0.01, 0.01, 0.01]'*dph;
             imu_err.web = [0.01, 0.01, 0.01]'*dpsh;
-            imu_err.db = [800, 900, 1000]'*ug;
-            imu_err.wdb = [10, 10, 10]'*ugpsHz;
+            imu_err.db = [100, 100, 100]'*ug;
+            imu_err.wdb = [1, 1, 1]'*ugpsHz;
         
         otherwise
             % *** 默认情况 *** 
@@ -39,7 +41,7 @@ if exist('condition', 'var')
     end
     
 else
-    % *** no error ***
+    % *** zero error ***
     % 如果没有给出condition，则默认imu误差为零 
     imu_err.case = 'zero';
     imu_err.eb = [0, 0, 0]'*dph;

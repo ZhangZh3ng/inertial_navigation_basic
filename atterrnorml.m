@@ -21,14 +21,14 @@ yaw_err = att_err(3);
 % roll 角度范围为: (-pi, pi]
 % yaw 角度范围为: [0, 2*pi)
 
-% 直接计算出的航向角误差可能时(-2*pi, 2*pi),但我们希望航向角误差在(-pi, pi]
-% 之间，如果航向角误差大于pi，就对其进行修正
+% 直接计算出的航向角误差∈(-2*pi, 2*pi),但我们希望航向角误差∈(-pi, pi]
+% 如果航向角误差绝对值大于pi，就令其标准化
 if norm(yaw_err) > pi
-    %如果航向角误差为正
+    % 如果航向角误差为正
     if sign(yaw_err) == 1
         yaw_err = yaw_err - 2*pi;
     else
-        %航向角误差大于pi，且符号为负
+        % 航向角误差大于pi，且符号为负
         yaw_err = yaw_err + 2*pi;
     end
 end

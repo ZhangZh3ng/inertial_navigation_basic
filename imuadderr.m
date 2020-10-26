@@ -7,6 +7,7 @@ function [ wm, vm ] = imuadderr( wm, vm, eb, web, db, wdb, ts )
 % 输入：
 %       wm: n×3 矩阵，每一行对应一个角增量：[theta_x, theta_y, theta_z] rad
 %       vm: n×3 矩阵，每一行对应一个速度增量 m/s
+%       注意！wm和vm如果由四列，最后一列是对应的时间
 %       eb: 陀螺仪常值漂移，即陀螺零偏
 %       web:角度随机游走误差
 %       db: 加速度计常值偏置
@@ -20,18 +21,34 @@ function [ wm, vm ] = imuadderr( wm, vm, eb, web, db, wdb, ts )
 %日期：2020年10月7日
 % ************************************************************************
 %%
-% 数据个数
-m = size(wm, 1);
-
+% 数据组数
+[m, n] = size(wm);
 % 步长开平方
 sts = sqrt(ts);
 
-wm = wm + [ts*eb(1) + sts*web(1)*randn(m, 1), ...
-           ts*eb(2) + sts*web(2)*randn(m, 1), ...
-           ts*eb(3) + sts*web(3)*randn(m, 1)];
-
-vm = vm + [ts*db(1) + sts*wdb(1)*randn(m, 1), ...
-           ts*db(2) + sts*wdb(2)*randn(m, 1), ...
-           ts*db(3) + sts*wdb(3)*randn(m, 1)];
+% 是否保存了时间戳
+switch n
+    case 3
+        % 列数为3，没有保存时间
+        wm = wm + [ts*eb(1) + sts*web(1)*randn(m, 1), ...
+                   ts*eb(2) + sts*web(2)*randn(m, 1), ...
+                   ts*eb(3) + sts*web(3)*randn(m, 1)];
+        
+        vm = vm + [ts*db(1) + sts*wdb(1)*randn(m, 1), ...
+                   ts*db(2) + sts*wdb(2)*randn(m, 1), ...
+                   ts*db(3) + sts*wdb(3)*randn(m, 1)];
+        
+    case 4
+        % 列数为4，最后一列保存时间
+        wm(:, 1:3) = wm(:, 1:3) + [ts*eb(1) + sts*web(1)*randn(m, 1), ...
+                                   ts*eb(2) + sts*web(2)*randn(m, 1), ...
+                                   ts*eb(3) + sts*web(3)*randn(m, 1)];
+        
+        vm(:, 1:3) = vm(:, 1:3) + [ts*db(1) + sts*wdb(1)*randn(m, 1), ...
+                                   ts*db(2) + sts*wdb(2)*randn(m, 1), ...
+                                   ts*db(3) + sts*wdb(3)*randn(m, 1)];
+    otherwise
+        disp('imuadderr.m 输入参数形式有误！');
+end
 
 end
