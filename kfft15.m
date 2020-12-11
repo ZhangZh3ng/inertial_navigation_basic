@@ -14,7 +14,7 @@ function [ Ft ] = kfft15( eth, Cbn, fb )
 %作者：哈尔滨工程大学 自动化学院 张峥
 %日期：2020年10月10日
 % ************************************************************************
-%%
+%% 
 global g0
 % 调整输入形式为列向量
 if size(fb, 1) == 1
@@ -35,8 +35,7 @@ f_RNh2 = f_RNh*f_RNh;
 vE_clRNh = eth.vn(1)*f_clRNh;
 vE_RNh2 = eth.vn(1)*f_RNh2;
 vN_RMh2 = eth.vn(2)*f_RMh2;
-
-%%
+%% 建立模型
 % P92 (4.2.33a)
 Mp1 = [           0,    0,  0
        -eth.wien(3),    0,  0
@@ -67,7 +66,6 @@ Mvp = skew(eth.vn)*(2*Mp1 + Mp2);
 scl = eth.sl*eth.cl;
 Mvp(3, 1) = Mvp(3, 1) - g0*(5.27094e-3*2*scl + 2.32718e-5*4*eth.sl2*scl);
 Mvp(3, 3) = Mvp(3, 3) + 3.086e-6;
-% ***P93 (4.2.40 1-3) end
 
 % P94 (4.2.42a)
 Mpv = [      0,  f_RMh,  0

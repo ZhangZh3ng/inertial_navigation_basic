@@ -77,7 +77,8 @@ for m = 1 : size(wat, 1)      % m：子轨迹的数目
         eth = earth(pos(kk, :)', vn01');
        
         % update position
-        pos(kk+1, :) = pos(kk, :) + [vn01(2)/eth.RMh; vn01(1)/eth.clRNh; vn01(3)]'*ts;
+        pos(kk+1, :) = pos(kk, :) + ...
+                        [vn01(2)/eth.RMh; vn01(1)/eth.clRNh; vn01(3)]'*ts;
         
         kk = kk+1;
     end

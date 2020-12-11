@@ -1,0 +1,25 @@
+# THIS .gitignore WAS WRITTEN FOR: inertail_navigation_basic
+
+# ### 忽略文件 ###
+# 文件夹
+/inertail_navigation/
+/unused/
+
+# 具有特定形式的文件
+*.mat
+*.md
+developing_*
+debug_*
+
+# 指定文件
+DEMO.m
+newProfile.m
+my_profile.m
+
+# ### 追踪文件 ###
+!README.md
+!UPDATELOG.md
+
+
+# ### 其他 ###
+#!MANUAL.md

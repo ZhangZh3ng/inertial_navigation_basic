@@ -23,7 +23,7 @@ if size(vn, 1) == 1
     vn = vn';
 end
 
-global Re ff wie g0
+global Re ff wie g0 
 
 % 第一偏心率
 ee = sqrt(2*ff - ff^2);

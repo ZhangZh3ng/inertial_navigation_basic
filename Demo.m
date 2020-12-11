@@ -3,6 +3,7 @@ clear all
 demo_0 = 1;
 rad = pi/180;
 deg = 180/pi;
+gn = [0, 0, 9.8]';
 
 pos = [30*pi/180, 120*pi/180, 200]';
 vn = [10, 10, 10];
@@ -64,6 +65,26 @@ wm = [1, 1, 1
 % 
 % clearvars -except R
 % imu_err = imuerror();
-name = 'selfdefine';
-exist('name', 'var') && ~strcmp(name, '') && ~strcmp(name, 'zero')
+% D = dir('D:\data\N_201102\Êý¾Ý1_');
+% k = 20;
+% if ~isempty(strfind(D(k).name, 'imu'))
+%     result = 1;
+%     data_path = D(k).name
+% else
+%     result = 0;
+% end
+% datestr(now)
+% att_ref = [-0.0034, 0.0040, -1.5694]';
+% Cbn_ref = a2mat(att_ref);
+% qbn_ref = a2qua(att_ref);
+% 
+% (Cbn_ref*gn - gn)*300
+close all;
+clear all;
+global Gl; 
+setGl_all;
+
+ecef = geodetic_to_ecef(Gl.pos);
+geo = ecef_to_geodetic(ecef);
+Gl.pos - geo
 

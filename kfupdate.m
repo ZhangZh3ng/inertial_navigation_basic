@@ -23,7 +23,6 @@ elseif nargin == 2
     time_measure_both = 'B';  
 end
 
-
 if time_measure_both == 'T' || time_measure_both == 'B'
     % *** 时间更新 ***
     % 状态预测
@@ -35,7 +34,6 @@ else % time_measure_both == 'M'(原文)
     kf.Xkk_1 = kf.Xk;
     kf.Pkk_1 = kf.Pk;
 end
-
 
 if time_measure_both == 'M' || time_measure_both == 'B'
     % *** 量测更新 ***

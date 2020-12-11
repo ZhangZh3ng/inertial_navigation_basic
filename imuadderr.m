@@ -1,4 +1,4 @@
-function [ wm, vm ] = imuadderr( wm, vm, eb, web, db, wdb, ts )
+function [ vm, wm ] = imuadderr( vm, wm, imuerr, ts )
 %% **************************************************************
 %名称：imu add error
 %功能：给真实imu输出添加误差，模拟实际中带有量测噪声的imu输出。
@@ -23,32 +23,40 @@ function [ wm, vm ] = imuadderr( wm, vm, eb, web, db, wdb, ts )
 %%
 % 数据组数
 [m, n] = size(wm);
-% 步长开平方
-sts = sqrt(ts);
 
-% 是否保存了时间戳
-switch n
-    case 3
-        % 列数为3，没有保存时间
-        wm = wm + [ts*eb(1) + sts*web(1)*randn(m, 1), ...
-                   ts*eb(2) + sts*web(2)*randn(m, 1), ...
-                   ts*eb(3) + sts*web(3)*randn(m, 1)];
-        
-        vm = vm + [ts*db(1) + sts*wdb(1)*randn(m, 1), ...
-                   ts*db(2) + sts*wdb(2)*randn(m, 1), ...
-                   ts*db(3) + sts*wdb(3)*randn(m, 1)];
-        
-    case 4
-        % 列数为4，最后一列保存时间
-        wm(:, 1:3) = wm(:, 1:3) + [ts*eb(1) + sts*web(1)*randn(m, 1), ...
-                                   ts*eb(2) + sts*web(2)*randn(m, 1), ...
-                                   ts*eb(3) + sts*web(3)*randn(m, 1)];
-        
-        vm(:, 1:3) = vm(:, 1:3) + [ts*db(1) + sts*wdb(1)*randn(m, 1), ...
-                                   ts*db(2) + sts*wdb(2)*randn(m, 1), ...
-                                   ts*db(3) + sts*wdb(3)*randn(m, 1)];
-    otherwise
-        disp('imuadderr.m 输入参数形式有误！');
+% 如果输入信息包含ts则认为imu信息是增量信息，否则认为是速度信息
+if exist('ts', 'var')
+    condition = 'increment';
+else
+    condition = 'velocity';
 end
 
+switch condition
+    % ** imu输出为增量形式 **
+    case 'increment'
+        % 步长开平方
+        sts = sqrt(ts);
+        
+        wm(:, 1:3) = wm(:, 1:3) + ...
+            [ts*imuerr.eb(1) + sts*imuerr.web(1)*randn(m, 1), ...
+             ts*imuerr.eb(2) + sts*imuerr.web(2)*randn(m, 1), ...
+             ts*imuerr.eb(3) + sts*imuerr.web(3)*randn(m, 1)];
+        
+        vm(:, 1:3) = vm(:, 1:3) + ...
+            [ts*imuerr.db(1) + sts*imuerr.wdb(1)*randn(m, 1), ...
+             ts*imuerr.db(2) + sts*imuerr.wdb(2)*randn(m, 1), ...
+             ts*imuerr.db(3) + sts*imuerr.wdb(3)*randn(m, 1)];
+       
+    % ** imu输出为比力和角速度 **    
+    case 'velocity'
+        wm(:, 1:3) = wm(:, 1:3) + ...
+            [imuerr.eb(1) + imuerr.web(1)*randn(m, 1), ...
+             imuerr.eb(2) + imuerr.web(2)*randn(m, 1), ...
+             imuerr.eb(3) + imuerr.web(3)*randn(m, 1)];
+        
+        vm(:, 1:3) = vm(:, 1:3) + ...
+            [imuerr.db(1) + imuerr.wdb(1)*randn(m, 1), ...
+             imuerr.db(2) + imuerr.wdb(2)*randn(m, 1), ...
+             imuerr.db(3) + imuerr.wdb(3)*randn(m, 1)];
+end
 end
